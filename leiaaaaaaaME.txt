@@ -1,0 +1,264 @@
+Para adicionar um CRUD com conexão a um banco de dados MySQL em um projeto React, você precisará de uma API backend que faça a comunicação entre o frontend (React) e o banco de dados MySQL. Aqui, vou sugerir uma estrutura básica usando Node.js com Express no backend e o pacote mysql2 para a conexão com o MySQL.
+Passos:
+
+    Criar API Backend com Node.js e Express
+    Conectar ao banco de dados MySQL
+    Implementar rotas CRUD no backend
+    Consumir essa API no frontend React
+
+1. Configurando o Backend (Node.js + Express + MySQL)
+
+Primeiro, crie uma pasta separada para o backend, por exemplo, server.
+a) Instalar as dependências
+
+Na pasta server, inicialize o projeto Node.js:
+
+bash
+
+mkdir server
+cd server
+npm init -y
+npm install express mysql2 cors
+
+    Express: Framework para criar a API.
+    mysql2: Pacote para conectar ao banco de dados MySQL.
+    cors: Habilita comunicação entre o frontend e backend.
+
+b) Criar o servidor Express
+
+Crie um arquivo server.js para configurar o servidor e a conexão ao MySQL:
+
+js
+
+const express = require('express');
+const mysql = require('mysql2');
+const cors = require('cors');
+
+const app = express();
+const port = 3001;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Configuração da conexão com o banco de dados
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root', // seu usuário do MySQL
+  password: '', // sua senha do MySQL
+  database: 'pet_schedule_db' // seu banco de dados
+});
+
+db.connect((err) => {
+  if (err) {
+    console.error('Erro ao conectar ao MySQL:', err);
+    return;
+  }
+  console.log('Conectado ao MySQL');
+});
+
+// Rota para criar um agendamento (Create)
+app.post('/appointments', (req, res) => {
+  const { petName, serviceType, appointmentDate } = req.body;
+  const sql = 'INSERT INTO appointments (petName, serviceType, appointmentDate) VALUES (?, ?, ?)';
+  db.query(sql, [petName, serviceType, appointmentDate], (err, result) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.send('Agendamento criado com sucesso!');
+  });
+});
+
+// Rota para ler todos os agendamentos (Read)
+app.get('/appointments', (req, res) => {
+  const sql = 'SELECT * FROM appointments';
+  db.query(sql, (err, result) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json(result);
+  });
+});
+
+// Rota para atualizar um agendamento (Update)
+app.put('/appointments/:id', (req, res) => {
+  const { id } = req.params;
+  const { petName, serviceType, appointmentDate } = req.body;
+  const sql = 'UPDATE appointments SET petName = ?, serviceType = ?, appointmentDate = ? WHERE id = ?';
+  db.query(sql, [petName, serviceType, appointmentDate, id], (err, result) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.send('Agendamento atualizado com sucesso!');
+  });
+});
+
+// Rota para deletar um agendamento (Delete)
+app.delete('/appointments/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = 'DELETE FROM appointments WHERE id = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.send('Agendamento excluído com sucesso!');
+  });
+});
+
+app.listen(port, () => {
+  console.log(`Servidor rodando na porta ${port}`);
+});
+
+c) Banco de Dados MySQL
+
+Certifique-se de que você tenha um banco de dados MySQL criado. Aqui está o SQL para criar uma tabela de agendamentos:
+
+sql
+
+CREATE DATABASE pet_schedule_db;
+
+USE pet_schedule_db;
+
+CREATE TABLE appointments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  petName VARCHAR(255) NOT NULL,
+  serviceType VARCHAR(255) NOT NULL,
+  appointmentDate DATE NOT NULL
+);
+
+2. Consumindo a API no Frontend (React)
+
+Agora, no seu projeto React, você pode consumir a API para fazer operações CRUD. Vamos adicionar exemplos de como você pode integrar o frontend ao backend:
+a) Instalar Axios
+
+Instale o Axios para fazer requisições HTTP no seu projeto React:
+
+bash
+
+yarn add axios
+
+b) Modificar o componente PetSchedule.tsx
+
+Aqui está uma versão do seu componente que consome as rotas CRUD da API:
+
+tsx
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+interface Appointment {
+  id?: number;
+  petName: string;
+  serviceType: string;
+  appointmentDate: string;
+}
+
+const PetSchedule: React.FC = () => {
+  const [petName, setPetName] = useState<string>('');
+  const [serviceType, setServiceType] = useState<string>('consulta');
+  const [appointmentDate, setAppointmentDate] = useState<string>('');
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const fetchAppointments = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/appointments');
+      setAppointments(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar agendamentos', error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const newAppointment: Appointment = { petName, serviceType, appointmentDate };
+
+    try {
+      await axios.post('http://localhost:3001/appointments', newAppointment);
+      fetchAppointments(); // Atualizar a lista de agendamentos
+      setPetName('');
+      setServiceType('consulta');
+      setAppointmentDate('');
+    } catch (error) {
+      console.error('Erro ao criar agendamento', error);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await axios.delete(`http://localhost:3001/appointments/${id}`);
+      fetchAppointments(); // Atualizar a lista de agendamentos após exclusão
+    } catch (error) {
+      console.error('Erro ao excluir agendamento', error);
+    }
+  };
+
+  return (
+    <div className="pet-schedule-container">
+      <h1>Agendamento de Consultas, Exames e Vacinas para Pets</h1>
+      
+      <form className="appointment-form" onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="petName">Nome do Pet:</label>
+          <input
+            type="text"
+            id="petName"
+            value={petName}
+            onChange={(e) => setPetName(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="serviceType">Tipo de Serviço:</label>
+          <select
+            id="serviceType"
+            value={serviceType}
+            onChange={(e) => setServiceType(e.target.value)}
+          >
+            <option value="consulta">Consulta</option>
+            <option value="exame">Exame</option>
+            <option value="vacina">Vacina</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="appointmentDate">Data do Agendamento:</label>
+          <input
+            type="date"
+            id="appointmentDate"
+            value={appointmentDate}
+            onChange={(e) => setAppointmentDate(e.target.value)}
+            required
+          />
+        </div>
+
+        <button type="submit">Agendar</button>
+      </form>
+
+      <h2>Agendamentos:</h2>
+      <ul className="appointment-list">
+        {appointments.map((appointment) => (
+          <li key={appointment.id}>
+            <strong>Pet:</strong> {appointment.petName} -{' '}
+            <strong>Serviço:</strong> {appointment.serviceType} -{' '}
+            <strong>Data:</strong> {appointment.appointmentDate}{' '}
+            <button onClick={() => handleDelete(appointment.id!)}>Excluir</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default PetSchedule;
+
+Conclusão:
+
+    Backend: Cria uma API com Node.js, Express e MySQL para gerenciar os agendamentos.
+    Frontend: O React usa Axios para interagir com essa API, possibilitando criar, ler, atualizar e excluir agendamentos.
+
+Com essa configuração, você terá uma aplicação CRUD completa integrando o React com o MySQL através de uma API Node.js.

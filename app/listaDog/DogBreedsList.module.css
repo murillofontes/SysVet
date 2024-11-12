@@ -1,0 +1,98 @@
+/* DogBreedsList.module.css */
+
+.containerum {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+    background-color: #f0f8ff; /* Fundo claro com tom de azul */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+
+  
+.containerum ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .containerum li {
+    background-color: #e3f2fd; /* Azul claro para os itens */
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+    font-family: 'Arial', sans-serif;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+    width: calc(50% - 20px); /* Responsivo: 2 colunas */
+  }
+  
+  .containerum li:hover {
+    transform: scale(1.05);
+  }
+  
+  .containerum img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  
+  @media (max-width: 600px) {
+    .containerum li {
+      width: 100%; /* No mobile, 1 coluna */
+    }
+  
+    .containerum img {
+      width: 80px;
+      height: 80px;
+    }
+  }
+  
+  .containerum select {
+    padding: 10px;
+    margin: 20px 0;
+    border: 1px solid #1a73e8;
+    border-radius: 5px;
+    background-color: #e3f2fd;
+    color: #1a73e8;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .containerum button {
+    padding: 10px 20px;
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-left: 8px;
+  }
+  
+  .containerum button:hover {
+    background-color: #155fa0;
+  }
+  
+  .selected-breed-image {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+    margin-top: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  @media (max-width: 600px) {
+    .selected-breed-image {
+      width: 100%;
+      height: auto;
+    }
+  }
+  
